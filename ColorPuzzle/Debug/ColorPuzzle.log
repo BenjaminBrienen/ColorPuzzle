@@ -1,0 +1,3 @@
+﻿  Rendering.c
+o:\documents\school\spring 2019\intro to computation and programming\projects\extra credit\colorpuzzle\colorpuzzle\rendering.c(15): warning C4244: 'function': conversion from 'int' to 'float', possible loss of data
+  ColorPuzzle.vcxproj -> O:\Documents\School\Spring 2019\Intro to Computation and Programming\Projects\Extra Credit\ColorPuzzle\Debug\ColorPuzzle.exe
