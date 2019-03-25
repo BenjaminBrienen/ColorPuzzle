@@ -1,18 +1,21 @@
 #include <GL/glut.h>
 #include "Rendering.h"
 #include "game.h"
+#include <math.h>
 
-void displayBoard(int sizeX, int sizeY, float board[16][16][3])
+void displayBoard(float board[size][size][3])
 {
-	for (int y = 0; y < sizeY; y++)
+	for (int y = 0; y < size; y++)
 	{
-		for (int x = 0; x < sizeX; x++)
+		for (int x = 0; x < size; x++)
 		{
 			float color[3];
 			color[0] = board[y][x][0];
 			color[1] = board[y][x][1];
 			color[2] = board[y][x][2];
-			displayRect(x, y, (float)glutGet(GLUT_WINDOW_WIDTH)/sizeX, (float)glutGet(GLUT_WINDOW_HEIGHT) / sizeY, color[0], color[1], color[2]);
+			float width = XRES / size;
+			float height = YRES / size;
+			displayRect(x*width, y*height, width, height, color[0], color[1], color[2]);
 		}
 	}
 }
@@ -29,4 +32,19 @@ void displayRect(float x, float y, float w, float h, float red, float green, flo
 	glVertex2f(0, h);
 	glEnd();
 	glPopMatrix();
+}
+
+void drawCursor(float cx, float cy, float r, int num_segments)
+{
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < num_segments; i++)
+	{
+		float theta = 2.0f * 3.1415926f * (float) i / (float)(num_segments);//get the current angle
+
+		float x = r * cos(theta);//calculate the x component
+		float y = r * sin(theta);//calculate the y component
+
+		glVertex2f(x + cx, y + cy);//output vertex
+
+	}
 }
