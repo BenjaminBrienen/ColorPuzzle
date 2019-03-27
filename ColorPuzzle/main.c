@@ -2,24 +2,24 @@
 //
 
 #include "pch.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <GL/glut.h>
 #include "Rendering.h"
 #include "game.h"
+#include <GL/freeglut.h>
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 void display();
 void keyboard(unsigned char key, int x, int y);
 void click(int button, int state, int x, int y);
 void assignColors(float color1[3], float color2[3], float color3[3], float color4[3]);
-void createGame(float board[sizeY][sizeX][3], float boardSolved[sizeY][sizeX][3], float color1[3], float color2[3], float color3[3], float color4[3]);
+void createGame(float *** board, int sizeX, int sizeY, float *** boardSolved, float color1[3], float color2[3], float color3[3], float color4[3]);
 void createGLUTWindow(int argc, char **argv);
 void displayInstructions();
+int compareColors(float color1[3], float color2[3]);
 
-float board[sizeY][sizeX][3] = { 0 };
-float boardSolved[sizeY][sizeX][3] = { 0 };
-
-int scrambleSteps = 25 * (sizeX*sizeY);
+int scrambleSteps = 0;
 float color1[3] = { 0 }; //bottom left
 float color2[3] = { 0 }; //botom right
 float color3[3] = { 0 }; //top left
@@ -28,17 +28,24 @@ int selectedX = 1;
 int selectedY = 1;
 int moves = 0;
 
+int quit = 0;
+
+int sizeX = 10;
+int sizeY = 10;
+
+float *** board;
+float *** boardSolved;
 
 int main(int argc, char **argv)
 {
+	scrambleSteps = 25 * (sizeX*sizeY);
+	board = malloc(sizeX * sizeY * 3 * sizeof(float**));
+	boardSolved = malloc(sizeX * sizeY * 3 * sizeof(float));
 	displayInstructions();
-	srand(time(0));
+	srand((unsigned int)time(0));
 	createGLUTWindow(argc, argv);
-	createGame(board, boardSolved, color1, color2, color3, color4);
-	display(board);
-	printf("Press enter to scramble board...");
-	getchar();
-	scrambleBoard(board, scrambleSteps);
+	createGame(board, sizeX, sizeY, boardSolved, color1, color2, color3, color4);
+	display();
 	glutMainLoop();
 
 	return 1;
@@ -56,26 +63,29 @@ void createGLUTWindow(int argc, char **argv)
 	glClearColor(0.0, 0.0, 0.0, 0.0);         // black background 
 	glMatrixMode(GL_PROJECTION);              // setup viewing projection 
 	glLoadIdentity();                           // start with identity matrix 
-	gluOrtho2D(0.0, XRES, 0.0, YRES, -1, 1);   // setup a sizexsizex2 viewing world
-	glutKeyboardFunc(keyboard);
+	gluOrtho2D(0.0, XRES, 0.0, YRES);   // setup a sizexsizex2 viewing world
+	glutKeyboardFunc(keyboard, sizeX, sizeY);
 	glutDisplayFunc(display);
 	glutMouseFunc(click);
 }
 
 void game()
 {
-	displayBoard(board);
+	displayBoard(board, sizeX, sizeY);
 }
 
 void display()
 {
+	if (quit)
+	{
+		glutLeaveMainLoop();
+	}
 	game();
 	//drawCursor(1, 1, 1, 10);
 
 	glFlush();
 }
 
-int selectMode = 0; //0 is none, 1 is x mode, 2 is y mode
 void keyboard(unsigned char key, int x, int y)
 {
 	moves++;
@@ -98,29 +108,40 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	switch (key)
 	{
-	case 'w':
-		makeVerticalMove(selectedX, 1, board);
-		selectedY++;
-		break;
-	case 's':
-		makeVerticalMove(selectedX, -1, board);
-		selectedY--;
-		break;
-	case 'a':
-		makeHorizontalMove(selectedY, -1, board);
-		selectedX--;
-		break;
-	case 'd':
-		makeHorizontalMove(selectedY, 1, board);
-		selectedX++;
-		break;
-	case 'r':
-		createGame(board, boardSolved, color1, color2, color3, color4);
-		break;
-	default:
-		break;
+		case 'w':
+			makeVerticalMove(selectedX, 1, board, sizeX, sizeY);
+			selectedY++;
+			break;
+		case 's':
+			makeVerticalMove(selectedX, -1, board, sizeX, sizeY);
+			selectedY--;
+			break;
+		case 'a':
+			makeHorizontalMove(selectedY, -1, board, sizeX, sizeY);
+			selectedX--;
+			break;
+		case 'd':
+			makeHorizontalMove(selectedY, 1, board, sizeX, sizeY);
+			selectedX++;
+			break;
+		case 'r':
+			moves = 0;
+			createGame(board, sizeX, sizeY, boardSolved, color1, color2, color3, color4);
+			printf("Press enter to scramble board...\n");
+			break;
+		case 'e':
+			free(board, sizeX, sizeY);
+			free(boardSolved);
+			quit = 1;
+			break;
+		case 13:
+			moves = 0;
+			scrambleBoard(board, sizeX, sizeY, scrambleSteps);
+			break;
+		default:
+			break;
 	}
-	if (checkBoard(board, boardSolved))
+	if (checkBoard(board, sizeX, sizeY, boardSolved) && key != 'r')
 	{
 		printf("You win!\nYou took %d moves.", moves);
 	}
@@ -154,18 +175,18 @@ void assignColors(float color1[3], float color2[3], float color3[3], float color
 	color4[1] = 0;
 	color4[2] = 0;
 */
-	color1[0] = rand() % 2;
-	color1[1] = rand() % 2;
-	color1[2] = rand() % 2;
-	color2[0] = rand() % 2;
-	color2[1] = rand() % 2;
-	color2[2] = rand() % 2;
-	color3[0] = rand() % 2;
-	color3[1] = rand() % 2;
-	color3[2] = rand() % 2;
-	color4[0] = rand() % 2;
-	color4[1] = rand() % 2;
-	color4[2] = rand() % 2;
+	color1[0] = (float)(rand() % 2);
+	color1[1] = (float)(rand() % 2);
+	color1[2] = (float)(rand() % 2);
+	color2[0] = (float)(rand() % 2);
+	color2[1] = (float)(rand() % 2);
+	color2[2] = (float)(rand() % 2);
+	color3[0] = (float)(rand() % 2);
+	color3[1] = (float)(rand() % 2);
+	color3[2] = (float)(rand() % 2);
+	color4[0] = (float)(rand() % 2);
+	color4[1] = (float)(rand() % 2);
+	color4[2] = (float)(rand() % 2);
 
 	if (compareColors(color1, color2) || compareColors(color1, color3) || compareColors(color1, color4))
 	{
@@ -182,12 +203,12 @@ void assignColors(float color1[3], float color2[3], float color3[3], float color
 
 }
 
-void createGame(float board[sizeY][sizeX][3], float boardSolved[sizeY][sizeX][3], float color1[3], float color2[3], float color3[3], float color4[3])
+void createGame(float *** board, int sizeX, int sizeY, float *** boardSolved, float color1[3], float color2[3], float color3[3], float color4[3])
 {
 	assignColors(color1, color2, color3, color4);
 
-	initBoard(board, color1, color2, color3, color4);
-	initBoard(boardSolved, color1, color2, color3, color4);
+	initBoard(board, sizeX, sizeY, color1, color2, color3, color4);
+	initBoard(boardSolved, sizeX, sizeY, color1, color2, color3, color4);
 }
 
 int compareColors(float color1[3], float color2[3])
@@ -200,7 +221,6 @@ int compareColors(float color1[3], float color2[3])
 void displayInstructions()
 {
 	printf("Hello, welcome to Color Puzzle. This is a 2D rubik's cube-esque puzzle game based on organizing colors.\n");
-	printf("After these instructions, you will be prompted to scramble the board.\n");
 	printf("The goal of the game is to unscramble the colors by organizing them into the correct location.\n");
 	printf("The controls are:\n");
 	printf("Click a colored tile to control it.\n");
@@ -209,4 +229,6 @@ void displayInstructions()
 	printf("The colors will wrap around to the other side of the board. However, the edge colors stay in place for reference.\n");
 	printf("The game will end when you completely organize all the colors.");
 	printf("The console will say when you have won.\n");
+	printf("Press 'e' to exit.\n");
+	printf("Press enter to scramble board at any time.");
 }

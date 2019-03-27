@@ -13,18 +13,18 @@
 #include <time.h>
 #include <GL/glut.h>
 
-void initBoard(float board[sizeY][sizeX][3], float color1[3], float color2[3], float color3[3], float color4[3])
+void initBoard(float *** board, int sizeX, int sizeY, float color1[3], float color2[3], float color3[3], float color4[3])
 {
 	for (int y = 0; y < sizeY; y++)
 	{
 		float nextColorLeft[3] = { 0 };
-		lerpColorF(nextColorLeft, color1, color3, y, sizeY - 1);
+		lerpColor(nextColorLeft, color1, color3, y, sizeY - 1);
 		board[y][0][0] = nextColorLeft[0];
 		board[y][0][1] = nextColorLeft[1];
 		board[y][0][2] = nextColorLeft[2];
 
 		float nextColorRight[3] = { 0 };
-		lerpColorF(nextColorRight, color2, color4, y, sizeY - 1);
+		lerpColor(nextColorRight, color2, color4, y, sizeY - 1);
 		board[y][sizeY - 1][0] = nextColorRight[0];
 		board[y][sizeY - 1][1] = nextColorRight[1];
 		board[y][sizeY - 1][2] = nextColorRight[2];
@@ -32,7 +32,7 @@ void initBoard(float board[sizeY][sizeX][3], float color1[3], float color2[3], f
 		for (int x = 1; x < sizeX - 1; x++)
 		{
 			float nextColorX[3] = { 0 };
-			lerpColorF(nextColorX, nextColorLeft, nextColorRight, x, sizeX - 1);
+			lerpColor(nextColorX, nextColorLeft, nextColorRight, x, sizeX - 1);
 			board[y][x][0] = nextColorX[0];
 			board[y][x][1] = nextColorX[1];
 			board[y][x][2] = nextColorX[2];
@@ -41,7 +41,7 @@ void initBoard(float board[sizeY][sizeX][3], float color1[3], float color2[3], f
 
 }
 
-void scrambleBoard(float board[sizeY][sizeX][3], int steps)
+void scrambleBoard(float *** board, int sizeX, int sizeY, int steps)
 {
 	for (int i = 1; i < steps; i++)
 	{
@@ -57,21 +57,21 @@ void scrambleBoard(float board[sizeY][sizeX][3], int steps)
 		{
 			continue;
 		}
-		//display(board);
-		makeHorizontalMove(randY, 1, board);
-		//display(board);
-		makeVerticalMove(randX, 1, board);
+		//display(board, sizeX, sizeY);
+		makeHorizontalMove(randY, 1, board, sizeX, sizeY);
+		//display(board, sizeX, sizeY);
+		makeVerticalMove(randX, 1, board, sizeX, sizeY);
 	}
 }
 
-void lerpColorF(float nextColor[3], float color1[3], float color2[3], int currentStep, int totalSteps)
+void lerpColor(float nextColor[3], float color1[3], float color2[3], int currentStep, int totalSteps)
 {
 	nextColor[0] = (1 - (float)currentStep / totalSteps)*color1[0] + ((float)currentStep / totalSteps)*color2[0];
 	nextColor[1] = (1 - (float)currentStep / totalSteps)*color1[1] + ((float)currentStep / totalSteps)*color2[1];
 	nextColor[2] = (1 - (float)currentStep / totalSteps)*color1[2] + ((float)currentStep / totalSteps)*color2[2];
 }
 
-void makeVerticalMove(int x, int dir, float board[sizeY][sizeX][3])
+void makeVerticalMove(int x, int dir, float *** board, int sizeX, int sizeY)
 {
 	float temp[3];
 	dir *= -1;
@@ -116,7 +116,7 @@ void makeVerticalMove(int x, int dir, float board[sizeY][sizeX][3])
 
 }
 
-void makeHorizontalMove(int y, int dir, float board[sizeY][sizeX][3])
+void makeHorizontalMove(int y, int dir, float *** board, int sizeX, int sizeY)
 {
 	float temp[3];
 	dir *= -1;
@@ -161,7 +161,7 @@ void makeHorizontalMove(int y, int dir, float board[sizeY][sizeX][3])
 
 }
 
-int checkBoard(float board[sizeY][sizeX][3], float boardSolved[sizeY][sizeX][3])
+int checkBoard(float *** board, int sizeX, int sizeY, float *** boardSolved)
 {
 	for (int i = 0; i < sizeY; i++)
 	{
