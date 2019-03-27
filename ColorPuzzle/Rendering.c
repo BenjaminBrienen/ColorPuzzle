@@ -3,18 +3,18 @@
 #include "game.h"
 #include <math.h>
 
-void displayBoard(float board[size][size][3])
+void displayBoard(float board[sizeY][sizeX][3])
 {
-	for (int y = 0; y < size; y++)
+	for (int y = 0; y < sizeY; y++)
 	{
-		for (int x = 0; x < size; x++)
+		for (int x = 0; x < sizeX; x++)
 		{
 			float color[3];
 			color[0] = board[y][x][0];
 			color[1] = board[y][x][1];
 			color[2] = board[y][x][2];
-			float width = XRES / size;
-			float height = YRES / size;
+			float width = (float) XRES / sizeX;
+			float height = (float)YRES / sizeY;
 			displayRect(x*width, y*height, width, height, color[0], color[1], color[2]);
 		}
 	}
